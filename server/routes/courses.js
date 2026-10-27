@@ -1,0 +1,4 @@
+const router=require('express').Router();const db=require('../db');const {verifyToken,allowRoles}=require('../middleware/auth');const wrap=require('../middleware/asyncHandler');
+router.get('/',verifyToken,wrap(async(req,res)=>{const [rows]=await db.query('SELECT c.*,COUNT(s.id) student_count FROM courses c LEFT JOIN students s ON s.course_id=c.id GROUP BY c.id ORDER BY c.id DESC');res.json(rows);}));
+router.post('/',verifyToken,allowRoles('admin'),wrap(async(req,res)=>{const {name,department,duration,semester}=req.body;if(!String(name||'').trim())return res.status(400).json({message:'Course name is required.'});const [r]=await db.query('INSERT INTO courses(name,department,duration,semester) VALUES(?,?,?,?)',[name.trim(),department||'Computer Applications',duration||'3 Years',Number(semester)||1]);res.status(201).json({id:r.insertId,message:'Course added.'});}));
+module.exports=router;

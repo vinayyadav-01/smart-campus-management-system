@@ -1,0 +1,4 @@
+const router=require('express').Router();const db=require('../db');const {verifyToken,allowRoles}=require('../middleware/auth');const wrap=require('../middleware/asyncHandler');
+router.get('/',verifyToken,wrap(async(req,res)=>{const [rows]=await db.query('SELECT n.*,u.name author FROM notices n LEFT JOIN users u ON u.id=n.published_by ORDER BY n.created_at DESC');res.json(rows);}));
+router.post('/',verifyToken,allowRoles('admin','faculty'),wrap(async(req,res)=>{const {title,message}=req.body;if(!String(title||'').trim()||!String(message||'').trim())return res.status(400).json({message:'Notice title and message are required.'});const [r]=await db.query('INSERT INTO notices(title,message,published_by) VALUES(?,?,?)',[title.trim(),message.trim(),req.user.id]);res.status(201).json({id:r.insertId,message:'Notice published.'});}));
+module.exports=router;
